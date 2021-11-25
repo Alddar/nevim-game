@@ -12,20 +12,23 @@ import {
     matchTerminate
 } from "./handlers/matchInit";
 import Initializer = nkruntime.Initializer;
+import {rpcCreateMatchId, RpcCreateMatchResponse, rpcListMatchesId, RpcListMatchesResponse} from "shared";
 
 const matchName = 'nevim'
 
-const rpcCreateMatchId = 'create-match'
+function rpcCreateReturn<_T>(r: _T): string {
+    return JSON.stringify(r)
+}
+
 const rpcCreateMatch: RpcFunction = (ctx: Context, logger: Logger, nk: Nakama, payload: string): string | void => {
     const matchId = nk.matchCreate(matchName);
     const match = nk.matchGet(matchId)
-    return JSON.stringify(match);
+    return rpcCreateReturn<RpcCreateMatchResponse>(match)
 }
 
-const rpcListMatchesId = 'list-matches'
 const rpcListMatches: RpcFunction = (context: Context, logger: Logger, nk: Nakama): string | void => {
     const matches = nk.matchList(50);
-    return JSON.stringify({matches})
+    return rpcCreateReturn<RpcListMatchesResponse>({matches})
 }
 
 const InitModule: nkruntime.InitModule =

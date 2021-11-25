@@ -30,15 +30,9 @@ export class GameCreateOrJoinComponent implements OnInit {
 
   createMatch() {
     this.nakamaService.waitForState(State.AUTHENTICATED, () => {
-      this.nakamaService.createMatch().pipe(switchMap((match) => {
-        if (match) {
-          return this.nakamaService.joinMatch(match.matchId)
-        } else {
-          return throwError(() => 'Couldn\'t join match!')
-        }
-      })).subscribe({
+      this.nakamaService.createMatch().subscribe({
           next: (match) => {
-            this.router.navigate(['game', 'lobby', match.match_id])
+            this.router.navigate(['game', 'lobby', match.matchId])
           },
           error: (error) => {
             console.error(error)
@@ -51,20 +45,6 @@ export class GameCreateOrJoinComponent implements OnInit {
 
   joinMatch() {
     const form = this.joinGameForm.value
-    this.nakamaService.waitForState(State.AUTHENTICATED, () => {
-      this.nakamaService.joinMatch(form.matchId).subscribe({
-        next: (match) => {
-          match.presences.forEach((presence) => {
-            this.store.dispatch(playerJoined({presence}))
-          })
-
-          this.router.navigate(['game', 'lobby', match.match_id])
-        },
-        error: (error) => {
-          console.log(error)
-          this.toastr.error(error)
-        }
-      })
-    })
+    this.router.navigate(['game', 'lobby', form.matchId])
   }
 }

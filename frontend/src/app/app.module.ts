@@ -11,7 +11,6 @@ import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {CommonModule} from "@angular/common";
 import {CoreModule} from "./features/core/core.module";
 import {InitService} from "./features/core/services/init.service";
-import {Observable} from "rxjs";
 
 function initializeApp(initService: InitService){
   return (): Promise<void>  => new Promise((resolve, reject) => {

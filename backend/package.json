@@ -24,7 +24,7 @@
   "dependencies": {
     "gulp": "^4.0.2",
     "nakama-runtime": "https://github.com/heroiclabs/nakama-common",
-    "parcel": "^2.0.1",
-    "rollup": "^2.60.1"
+    "rollup": "^2.60.1",
+    "shared": "../shared/dist"
   }
 }

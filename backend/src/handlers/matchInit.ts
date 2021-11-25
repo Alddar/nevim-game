@@ -1,16 +1,12 @@
+import { GameState } from "shared";
 import Context = nkruntime.Context;
 import Logger = nkruntime.Logger;
 import Nakama = nkruntime.Nakama;
-import MatchState = nkruntime.MatchState;
 import MatchSignalFunction = nkruntime.MatchSignalFunction;
 import MatchDispatcher = nkruntime.MatchDispatcher;
 import Presence = nkruntime.Presence;
 import MatchMessage = nkruntime.MatchMessage;
 
-interface GameState extends MatchState {
-    presences: Presence[],
-    ticksEmpty: number
-}
 
 export const matchInit =  (ctx: Context, logger: Logger, nk: Nakama, params: { [key: string]: string; }):  { state: GameState; tickRate: number; label: string; } => {
     logger.debug('Lobby match created');
@@ -39,7 +35,6 @@ export const matchJoinAttempt = (ctx: Context, logger: Logger, nk: Nakama, dispa
 export const matchJoin = (ctx: Context, logger: Logger, nk: Nakama, dispatcher: MatchDispatcher, tick: number, state: GameState, presences: Presence[])
     : { state: GameState } | null => {
     state.presences = [...state.presences, ...presences]
-    logger.debug('State:', state)
 
     return {
         state
@@ -60,12 +55,6 @@ export const matchLeave = (ctx: Context, logger: Logger, nk: Nakama, dispatcher:
 
 export const matchLoop = (ctx: Context, logger: Logger, nk: Nakama, dispatcher: MatchDispatcher, tick: number, state: GameState, messages: MatchMessage[])
     : { state: GameState} | null => {
-    logger.debug('Lobby match loop executed');
-
-    state.presences.forEach(presence => {
-        logger.info('Presence %v name $v', presence.userId, presence.username);
-    });
-
     messages.forEach(message => {
         logger.info('Received %v from %v', message.data, message.sender.userId);
         dispatcher.broadcastMessage(1, message.data, [message.sender], null);

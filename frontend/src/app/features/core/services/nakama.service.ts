@@ -1,9 +1,9 @@
 import {Injectable} from '@angular/core';
 import {Client, Match, MatchPresenceEvent, Session, Socket} from "@heroiclabs/nakama-js";
-import {v4 as uuidv4} from "uuid";
 import {CookieService} from "ngx-cookie-service";
-import {BehaviorSubject, EMPTY, filter, from, map, mergeMap, Observable, take, tap} from "rxjs";
-import {ApiAccount, ApiUpdateAccountRequest} from "@heroiclabs/nakama-js/dist/api.gen";
+import {BehaviorSubject, EMPTY, filter, from, map, mergeMap, Observable, of, take, tap} from "rxjs";
+import {ApiAccount} from "@heroiclabs/nakama-js/dist/api.gen";
+import { rpcCreateMatchId, RpcCreateMatchResponse } from 'shared';
 
 export enum State {
   INIT,
@@ -37,6 +37,9 @@ export class NakamaService {
     this.socket.onmatchpresence = (event) => {
       this.matchPresenceSubject.next(event)
     }
+    this.socket.onmatchdata = (matchData) => {
+      console.log(matchData)
+    }
   }
 
   public waitForState(state: State, fn: Function) {
@@ -68,10 +71,9 @@ export class NakamaService {
     return from(this.client.getAccount(this.session!!))
   }
 
-  createMatch(): Observable<{ size: number, label: string, matchId: string, authoritative: true }> {
-    const rpcId = 'create-match'
-    return from(this.client.rpc(this.session!!, rpcId, {})).pipe(map(
-      (rpcResponse) => rpcResponse.payload as any)
+  createMatch(): Observable<RpcCreateMatchResponse> {
+    return from(this.client.rpc(this.session!!, rpcCreateMatchId, {})).pipe(map(
+      (rpcResponse) => rpcResponse.payload as RpcCreateMatchResponse)
     )
   }
 
@@ -85,5 +87,9 @@ export class NakamaService {
   joinMatch(id: string): Observable<Match> {
     if (!this.socket) return EMPTY
     return from(this.socket.joinMatch(id))
+  }
+
+  leaveMatch(id: string) {
+    this.socket?.leaveMatch(id)
   }
 }

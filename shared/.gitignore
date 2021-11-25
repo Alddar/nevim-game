@@ -1,0 +1,4 @@
+shared.iml
+dist
+node_modules
+.parcel-cache

@@ -1,11 +1,8 @@
 import {
   ActionReducerMap, createReducer,
-  MetaReducer, on
+  MetaReducer
 } from '@ngrx/store';
 import { environment } from '../../../../environments/environment';
-import {Client} from "@heroiclabs/nakama-js";
-import {authenticateUser} from "./core.actions";
-import {Presence} from "@heroiclabs/nakama-js/socket";
 
 export const coreStateFeatureKey = 'coreState';
 

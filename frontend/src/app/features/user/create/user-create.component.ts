@@ -34,7 +34,7 @@ export class UserCreateComponent implements OnInit {
     this.nakamaService.authenticate(user.deviceId, user.username).subscribe({
         next: (success) => {
           this.userService.saveUser(user)
-          this.router.navigate(['game','create'])
+          this.router.navigate(['game','create-or-join'])
         },
         error: (err) => {
           console.error(err)
