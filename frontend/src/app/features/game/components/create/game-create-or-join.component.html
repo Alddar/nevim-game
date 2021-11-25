@@ -1,0 +1,6 @@
+<button type="submit" class="btn-primary" (click)="createMatch()">Create match</button>
+
+<form [formGroup]="joinGameForm" (submit)="joinMatch()">
+  <input placeholder="matchId" class="input-text" type="text" formControlName="matchId" />
+  <button type="submit" class="btn-primary" [disabled]="!joinGameForm.valid">Join match</button>
+</form>

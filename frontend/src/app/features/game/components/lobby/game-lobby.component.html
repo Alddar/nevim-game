@@ -1,0 +1,5 @@
+<button class="btn-primary" [routerLink]="['/game', 'create-or-join']">Back</button>
+<p>Match: {{matchId}}</p>
+<p *ngFor="let player of (playerList$ | async)">
+  {{player.user_id}}: {{player.username}}
+</p>

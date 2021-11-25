@@ -1,0 +1,15 @@
+<div class="flex h-screen bg-gray-200">
+  <div class="m-auto w-full max-w-md bg-white shadow-md rounded px-8 pt-6 pb-8">
+    <h1 class="text-3xl mb-8 text-center font-bold">Welcome to NEVIM!</h1>
+    <form [formGroup]="userForm" (submit)="createUser()">
+      <div class="mb-8">
+        <label for="username" class="block text-gray-700 text-sm mb-2">Please choose a username</label>
+        <input class="input-text"
+          id="username" placeholder="username" type="text" formControlName="username">
+      </div>
+      <div>
+        <button type="submit" class="w-full btn-primary">Enter</button>
+      </div>
+    </form>
+  </div>
+</div>
