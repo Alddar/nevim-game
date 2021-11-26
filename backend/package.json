@@ -25,6 +25,7 @@
     "gulp": "^4.0.2",
     "nakama-runtime": "https://github.com/heroiclabs/nakama-common",
     "rollup": "^2.60.1",
+    "rollup-plugin-ignore": "^1.0.10",
     "shared": "../shared/dist"
   }
 }

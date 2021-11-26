@@ -4,6 +4,7 @@ import json from '@rollup/plugin-json';
 import babel from '@rollup/plugin-babel';
 import typescript from '@rollup/plugin-typescript';
 import pkg from './package.json';
+import ignore from "rollup-plugin-ignore";
 
 const extensions = ['.mjs', '.js', '.ts', '.json'];
 
@@ -27,6 +28,7 @@ export default {
             extensions,
             babelHelpers: 'bundled',
         }),
+        ignore(['nakama-runtime'])
     ],
     output: {
         file: pkg.main,

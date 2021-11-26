@@ -10,6 +10,8 @@ import {StoreModule} from "@ngrx/store";
 import * as fromGameState from "./store/game.reducer";
 import {EffectsModule} from "@ngrx/effects";
 import {GameEffects} from "./store/game.effects";
+import { NgxTippyModule } from 'ngx-tippy-wrapper';
+import {ClipboardModule} from "ngx-clipboard";
 
 
 @NgModule({
@@ -18,13 +20,16 @@ import {GameEffects} from "./store/game.effects";
     GameCreateOrJoinComponent,
     GameLobbyComponent
   ],
-  imports: [
-    CommonModule,
-    GameRoutingModule,
-    ReactiveFormsModule,
-    StoreModule.forFeature(fromGameState.gameStateFeatureKey, fromGameState.reducers, { metaReducers: fromGameState.metaReducers }),
-    EffectsModule.forFeature([GameEffects]),
-  ]
+    imports: [
+        CommonModule,
+        GameRoutingModule,
+        ReactiveFormsModule,
+        StoreModule.forFeature(fromGameState.gameStateFeatureKey, fromGameState.reducers, {metaReducers: fromGameState.metaReducers}),
+        EffectsModule.forFeature([GameEffects]),
+        NgxTippyModule,
+        ClipboardModule,
+        // ClipboardModule
+    ]
 })
 export class GameModule {
 }

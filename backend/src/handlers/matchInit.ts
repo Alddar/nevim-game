@@ -1,20 +1,26 @@
-import { GameState } from "shared";
+import { GameState, MatchDataState, OpCodes } from "shared";
 import Context = nkruntime.Context;
 import Logger = nkruntime.Logger;
 import Nakama = nkruntime.Nakama;
-import MatchSignalFunction = nkruntime.MatchSignalFunction;
 import MatchDispatcher = nkruntime.MatchDispatcher;
 import Presence = nkruntime.Presence;
 import MatchMessage = nkruntime.MatchMessage;
 
+function gameStateToMatchData(state: GameState, userId: string): MatchDataState {
+    const {players, gameOwner} = state
+    return {
+        players,
+        gameOwner
+    }
+}
 
 export const matchInit =  (ctx: Context, logger: Logger, nk: Nakama, params: { [key: string]: string; }):  { state: GameState; tickRate: number; label: string; } => {
     logger.debug('Lobby match created');
 
-    const presences: Presence[] = [];
     return {
         state: {
-            presences,
+            players: [],
+            gameOwner: '',
             ticksEmpty: 0
         },
         tickRate: 5,
@@ -34,7 +40,26 @@ export const matchJoinAttempt = (ctx: Context, logger: Logger, nk: Nakama, dispa
 
 export const matchJoin = (ctx: Context, logger: Logger, nk: Nakama, dispatcher: MatchDispatcher, tick: number, state: GameState, presences: Presence[])
     : { state: GameState } | null => {
-    state.presences = [...state.presences, ...presences]
+    if(presences.length === 0) {
+        return {state}
+    }
+
+    const newPlayers = presences.map((presence) => {
+        const {displayName} = nk.usersGetId([presence.userId])[0]
+        return {...presence, displayName: displayName}
+    })
+    state.players = [...state.players, ...newPlayers]
+
+    if(state.gameOwner === '') {
+        state.gameOwner = presences[0].userId
+    }
+    state.players.forEach((player) => {
+        dispatcher.broadcastMessage(
+            OpCodes.GAME_STATE_UPDATE,
+            JSON.stringify(gameStateToMatchData(state, player.userId)),
+            [player]
+        )
+    })
 
     return {
         state
@@ -44,9 +69,24 @@ export const matchJoin = (ctx: Context, logger: Logger, nk: Nakama, dispatcher: 
 export const matchLeave = (ctx: Context, logger: Logger, nk: Nakama, dispatcher: MatchDispatcher, tick: number, state: GameState, presences: Presence[])
     : { state: GameState } | null => {
     presences.forEach(presence => {
-        state.presences = state.presences.filter(p => presence.userId !== p.userId);
+        state.players = state.players.filter(p => presence.userId !== p.userId);
+        if(presence.userId === state.gameOwner) {
+            state.gameOwner = ''
+        }
         logger.debug('%q left Lobby match', presence.userId);
     });
+
+    if(state.gameOwner === '' && state.players.length !== 0) {
+        state.gameOwner = state.players[0].userId
+    }
+
+    state.players.forEach((player) => {
+        dispatcher.broadcastMessage(
+            OpCodes.GAME_STATE_UPDATE,
+            JSON.stringify(gameStateToMatchData(state, player.userId)),
+            [player]
+        )
+    })
 
     return {
         state
@@ -57,10 +97,10 @@ export const matchLoop = (ctx: Context, logger: Logger, nk: Nakama, dispatcher: 
     : { state: GameState} | null => {
     messages.forEach(message => {
         logger.info('Received %v from %v', message.data, message.sender.userId);
-        dispatcher.broadcastMessage(1, message.data, [message.sender], null);
+        // dispatcher.broadcastMessage(1, message.data, [message.sender], null);
     });
 
-    if(state.presences.length === 0)
+    if(state.players.length === 0)
         state.ticksEmpty++
     else
         state.ticksEmpty = 0
@@ -77,15 +117,15 @@ export const matchTerminate = (ctx: Context, logger: Logger, nk: Nakama, dispatc
     : { state: GameState} | null => {
     logger.debug('Lobby match terminated');
 
-    const message = `Server shutting down in ${graceSeconds} seconds.`;
-    dispatcher.broadcastMessage(2, message, null, null);
+    // const message = `Server shutting down in ${graceSeconds} seconds.`;
+    // dispatcher.broadcastMessage(2, message, null, null);
 
     return {
         state
     };
 }
 
-export const matchSignal: MatchSignalFunction = (ctx: Context, logger: Logger, nk: Nakama, dispatcher: MatchDispatcher, tick: number, state: GameState, data: string)
+export const matchSignal = (ctx: Context, logger: Logger, nk: Nakama, dispatcher: MatchDispatcher, tick: number, state: GameState, data: string)
     : { state: GameState; tickRate: number; label: string; } => {
     return { state: state, tickRate: 5, label: "" };
 };

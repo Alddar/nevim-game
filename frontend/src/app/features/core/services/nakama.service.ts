@@ -1,9 +1,9 @@
 import {Injectable} from '@angular/core';
-import {Client, Match, MatchPresenceEvent, Session, Socket} from "@heroiclabs/nakama-js";
+import {Client, Match, MatchData, MatchPresenceEvent, Session, Socket} from "@heroiclabs/nakama-js";
 import {CookieService} from "ngx-cookie-service";
 import {BehaviorSubject, EMPTY, filter, from, map, mergeMap, Observable, of, take, tap} from "rxjs";
 import {ApiAccount} from "@heroiclabs/nakama-js/dist/api.gen";
-import { rpcCreateMatchId, RpcCreateMatchResponse } from 'shared';
+import {rpcCreateMatchId, RpcCreateMatchResponse} from 'shared';
 
 export enum State {
   INIT,
@@ -19,12 +19,16 @@ export class NakamaService {
   private socket: Socket | null = null
   private sessionPromise: Promise<any> | null = null
 
-  private matchPresenceSubject = new BehaviorSubject<MatchPresenceEvent | null>(null)
+  private matchDataSubject = new BehaviorSubject<MatchData | null>(null)
 
   private stateSubject = new BehaviorSubject<State>(State.INIT)
+  public get matchData$() {
+    return this.matchDataSubject.asObservable()
+  }
 
-  public get matchPresence$() {
-    return this.matchPresenceSubject.asObservable()
+  private userIdSubject = new BehaviorSubject<string>("")
+  public get userId$() {
+    return this.userIdSubject.asObservable()
   }
 
   constructor(private cookieService: CookieService) {
@@ -34,11 +38,8 @@ export class NakamaService {
   private registerSocketCallbacks() {
     if (!this.socket)
       return
-    this.socket.onmatchpresence = (event) => {
-      this.matchPresenceSubject.next(event)
-    }
     this.socket.onmatchdata = (matchData) => {
-      console.log(matchData)
+      this.matchDataSubject.next(matchData)
     }
   }
 
@@ -53,18 +54,22 @@ export class NakamaService {
     this.stateSubject.next(State.INIT)
     this.socket = this.client.createSocket(false, true)
 
-    return from(this.client.authenticateDevice(deviceId, true, username)).pipe(
+    return from(this.client.authenticateDevice(deviceId, true, deviceId)).pipe(
       mergeMap((session) => {
-      this.session = session
-      return from(this.socket?.connect(session, false) || EMPTY).pipe(
-        tap(session => {
-          this.session = session
-          this.registerSocketCallbacks();
-          this.stateSubject.next(State.AUTHENTICATED)
-        }),
-        map(() => true)
-      )
-    }))
+        if(session.user_id)
+          this.userIdSubject.next(session.user_id)
+
+        this.client.updateAccount(session, {display_name: username})
+        this.session = session
+        return from(this.socket?.connect(session, false) || EMPTY).pipe(
+          tap(session => {
+            this.session = session
+            this.registerSocketCallbacks();
+            this.stateSubject.next(State.AUTHENTICATED)
+          }),
+          map(() => true)
+        )
+      }))
   }
 
   getAccount(): Observable<ApiAccount> | null {

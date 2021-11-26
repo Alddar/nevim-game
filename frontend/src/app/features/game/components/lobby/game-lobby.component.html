@@ -1,5 +1,22 @@
-<button class="btn-primary" (click)="leaveMatch()">Back</button>
-<p>Match: {{matchId}}</p>
-<p *ngFor="let player of (playerList$ | async)">
-  {{player.user_id}}: {{player.username}}
-</p>
+<div class="flex h-screen bg-gray-200">
+  <div class="m-auto w-full max-w-3xl bg-white shadow-md rounded px-8 pt-6 pb-8">
+    <div class="flex">
+      <!--        [ngxClipboard]="gameLink"-->
+      <div class="w-10 z-10 pl-1 text-center flex items-center justify-center cursor-pointer hover:text-gray-500 text-gray-400"
+        (click)="copyLink()"
+         ngxTippy [tippyProps]="copyTextTippyProps"
+          ngxClipboard [cbContent]="link">
+        <i class="fas fa-copy text-lg"></i>
+      </div>
+      <input type="text" class="w-full -ml-10 pl-10 input-text" readonly [value]="link">
+    </div>
+    <button class="btn-primary" (click)="leaveMatch()">Back</button>
+    <div *ngIf="gameState$ | async as gameState">
+      <div *ngFor="let player of gameState.players" [ngClass]="{'font-bold': (userId$ | async) === player.userId}">
+        <i *ngIf="gameState.gameOwner === player.userId" class="fas fa-crown text-yellow-400"></i>
+        {{player.displayName}}
+      </div>
+    </div>
+    <div class="">Chat</div>
+  </div>
+</div>

@@ -6,6 +6,7 @@
 @import 'tailwindcss/utilities';
 /*@import 'fontisto/css/fontisto/fontisto.css';*/
 @import '@fortawesome/fontawesome-free/css/all.css';
+@import 'tippy.js/dist/tippy.css';
 
 html, body
 {
@@ -25,9 +26,10 @@ html, body
 }
 
 .input-text {
-  @apply shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight;
+  @apply  py-2 rounded border-2 border-gray-200 outline-none;
+  /* @apply shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight; */
 }
 
 .input-text:focus {
-  @apply focus:outline-none;
+  @apply border-indigo-500;
 }

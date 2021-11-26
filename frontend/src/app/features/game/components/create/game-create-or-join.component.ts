@@ -3,8 +3,6 @@ import {FormBuilder, Validators} from "@angular/forms";
 import {NakamaService, State} from "../../../core/services/nakama.service";
 import {ToastrService} from "ngx-toastr";
 import {Router} from "@angular/router";
-import {switchMap, throwError} from "rxjs";
-import {playerJoined} from "../../store/game.actions";
 import {Store} from "@ngrx/store";
 
 @Component({

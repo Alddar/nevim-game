@@ -1,11 +1,12 @@
 import {Component, OnInit} from '@angular/core';
 import {ActivatedRoute, Router} from "@angular/router";
 import {NakamaService, State} from "../../../core/services/nakama.service";
-import {map, switchMap, tap} from "rxjs";
+import {map, merge, mergeMap, of, startWith, Subject, switchMap, tap, timer} from "rxjs";
 import {Store} from "@ngrx/store";
-import {selectPlayerList} from "../../store/game.selectors";
+import {selectGameState} from "../../store/game.selectors";
 import {ToastrService} from "ngx-toastr";
-import {playerJoined, resetPresences} from "../../store/game.actions";
+import {NgxTippyProps} from "ngx-tippy-wrapper";
+import {Placement} from "@popperjs/core";
 
 @Component({
   selector: 'app-game-lobby',
@@ -15,7 +16,32 @@ import {playerJoined, resetPresences} from "../../store/game.actions";
 export class GameLobbyComponent implements OnInit {
 
   matchId: string = ""
-  playerList$ = this.store.select(selectPlayerList)
+  gameState$ = this.store.select(selectGameState)
+
+  copyClickedSubj = new Subject<boolean>()
+  copyText$ = this.copyClickedSubj.pipe(
+    mergeMap(() => merge(
+      of('Link copied!'),
+      timer(1000).pipe(
+        map(() => 'Click to copy!')
+      ))),
+    startWith('Click to copy!')
+  )
+
+  copyTextTippyProps: NgxTippyProps = (() => {
+    const copyText$ = this.copyText$
+    return {
+      onShow(instance: any): void | false {
+        copyText$.subscribe((text) => {
+          instance.setContent(text)
+        })
+      },
+      hideOnClick: false,
+      placement: 'bottom' as Placement,
+    }
+  })()
+
+  userId$ = this.nakamaService.userId$
 
   constructor(private route: ActivatedRoute,
               private nakamaService: NakamaService,
@@ -24,6 +50,7 @@ export class GameLobbyComponent implements OnInit {
               private router: Router) {
 
     this.nakamaService.waitForState(State.AUTHENTICATED, () => {
+      this.nakamaService.getAccount()?.subscribe((acc) => console.log('acc', acc))
       this.route.params.pipe(
         map((params): string => params['id']),
         tap((matchId) => this.matchId = matchId),
@@ -31,11 +58,7 @@ export class GameLobbyComponent implements OnInit {
           return this.nakamaService.joinMatch(matchId)
         })
       ).subscribe({
-        next: (match) => {
-          match.presences?.forEach((presence) => {
-            this.store.dispatch(playerJoined({presence}))
-          })
-        }, error: (err) => {
+        error: (err) => {
           this.toastr.error(JSON.stringify(err))
           this.router.navigate(['game', 'create-or-join'])
         }
@@ -49,7 +72,15 @@ export class GameLobbyComponent implements OnInit {
 
   leaveMatch() {
     this.nakamaService.leaveMatch(this.matchId)
-    this.store.dispatch(resetPresences())
     this.router.navigate(['game', 'create-or-join'])
+  }
+
+  get link() {
+    const host = window.location.host
+    return `${host}/join/${this.matchId}`
+  }
+
+  copyLink() {
+    this.copyClickedSubj.next(true)
   }
 }

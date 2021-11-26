@@ -3,7 +3,7 @@ import {GameState, gameStateFeatureKey} from "./game.reducer";
 
 const selectGame = createFeatureSelector<GameState>(gameStateFeatureKey)
 
-export const selectPlayerList = createSelector(
+export const selectGameState = createSelector(
   selectGame,
-  (game) => game.playerList
+  (game) => game.gameState
 )

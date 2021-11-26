@@ -1,6 +1,7 @@
 import {createAction, props} from "@ngrx/store";
-import {Presence} from "@heroiclabs/nakama-js";
+import { MatchDataState } from "shared";
 
-export const playerJoined = createAction('game/playerJoined', props<{presence: Presence}>())
-export const playerLeft = createAction('game/playerLeft', props<{presence: Presence}>())
-export const resetPresences = createAction('game/resetPresences')
+// gameState
+
+export const gameStateUpdate = createAction('game/gameStateUpdate', props<{gameState: MatchDataState}>())
+

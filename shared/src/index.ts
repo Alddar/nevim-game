@@ -1,4 +1,4 @@
-// import 'nakama-runtime'
+import 'nakama-runtime'
 
 import MatchState = nkruntime.MatchState;
 import Presence = nkruntime.Presence;
@@ -18,7 +18,21 @@ export interface RpcListMatchesResponse {
     matches: Match[]
 }
 
+export interface Player extends Presence {
+    displayName: string
+}
+
 export interface GameState extends MatchState {
-    presences: Presence[],
-    ticksEmpty: number
+    players: Player[],
+    ticksEmpty: number,
+    gameOwner: string
+}
+
+export interface MatchDataState {
+    players: Player[]
+    gameOwner: string
+}
+
+export class OpCodes {
+    public static readonly GAME_STATE_UPDATE = 1
 }
