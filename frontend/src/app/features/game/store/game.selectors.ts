@@ -7,3 +7,8 @@ export const selectGameState = createSelector(
   selectGame,
   (game) => game.gameState
 )
+
+export const selectChatMessages = createSelector(
+  selectGame,
+  (game) => game.chatMessages
+)

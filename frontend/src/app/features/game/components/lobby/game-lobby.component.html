@@ -1,22 +1,29 @@
-<div class="flex h-screen bg-gray-200">
+<div class="flex h-screen bg-gray-200 text-gray-600">
   <div class="m-auto w-full max-w-3xl bg-white shadow-md rounded px-8 pt-6 pb-8">
     <div class="flex">
-      <!--        [ngxClipboard]="gameLink"-->
-      <div class="w-10 z-10 pl-1 text-center flex items-center justify-center cursor-pointer hover:text-gray-500 text-gray-400"
+      <div
+        class="w-10 z-10 pl-1 text-center flex items-center justify-center cursor-pointer hover:text-gray-500 text-gray-400"
         (click)="copyLink()"
-         ngxTippy [tippyProps]="copyTextTippyProps"
-          ngxClipboard [cbContent]="link">
+        ngxTippy [tippyProps]="copyTextTippyProps">
         <i class="fas fa-copy text-lg"></i>
       </div>
       <input type="text" class="w-full -ml-10 pl-10 input-text" readonly [value]="link">
     </div>
-    <button class="btn-primary" (click)="leaveMatch()">Back</button>
-    <div *ngIf="gameState$ | async as gameState">
-      <div *ngFor="let player of gameState.players" [ngClass]="{'font-bold': (userId$ | async) === player.userId}">
-        <i *ngIf="gameState.gameOwner === player.userId" class="fas fa-crown text-yellow-400"></i>
-        {{player.displayName}}
+    <button class="btn-primary" (click)="leaveMatch()">Zpět</button>
+    <div class="flex mt-4 h-80" *ngIf="gameState$ | async as gameState">
+      <div class="w-1/2 shadow-md mr-3 rounded p-3 border border-gray-100">
+        <div class="text-lg font-medium">Hráči</div>
+        <div class="flex mt-2" *ngFor="let player of gameState.players" [ngClass]="{'font-bold': (userId$ | async) === player.userId}">
+          <div class="w-8">
+            <i *ngIf="gameState.gameOwner === player.userId" class="fas fa-crown text-yellow-400"></i>
+          </div>
+          <span>{{player.displayName}}</span>
+        </div>
+      </div>
+      <div class="w-1/2 shadow-md ml-3 rounded p-3 border border-gray-100 flex flex-col">
+        <div class="text-lg font-medium">Chat</div>
+        <app-game-chat class="h-full"></app-game-chat>
       </div>
     </div>
-    <div class="">Chat</div>
   </div>
 </div>

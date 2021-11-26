@@ -22,17 +22,25 @@ export interface Player extends Presence {
     displayName: string
 }
 
+export interface ChatMessage {
+    from: string,
+    message: string
+}
+
 export interface GameState extends MatchState {
     players: Player[],
     ticksEmpty: number,
-    gameOwner: string
+    gameOwner: string,
+    chatMessages: ChatMessage[]
 }
 
-export interface MatchDataState {
+export interface GameStateToClient {
     players: Player[]
     gameOwner: string
 }
 
 export class OpCodes {
     public static readonly GAME_STATE_UPDATE = 1
+    public static readonly SEND_CHAT_MESSAGE = 2
+    public static readonly CHAT_MESSAGES = 3
 }

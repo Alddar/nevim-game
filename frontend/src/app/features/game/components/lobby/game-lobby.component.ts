@@ -3,7 +3,7 @@ import {ActivatedRoute, Router} from "@angular/router";
 import {NakamaService, State} from "../../../core/services/nakama.service";
 import {map, merge, mergeMap, of, startWith, Subject, switchMap, tap, timer} from "rxjs";
 import {Store} from "@ngrx/store";
-import {selectGameState} from "../../store/game.selectors";
+import {selectChatMessages, selectGameState} from "../../store/game.selectors";
 import {ToastrService} from "ngx-toastr";
 import {NgxTippyProps} from "ngx-tippy-wrapper";
 import {Placement} from "@popperjs/core";
@@ -21,11 +21,11 @@ export class GameLobbyComponent implements OnInit {
   copyClickedSubj = new Subject<boolean>()
   copyText$ = this.copyClickedSubj.pipe(
     mergeMap(() => merge(
-      of('Link copied!'),
+      of('Odkaz zkopírován!'),
       timer(1000).pipe(
-        map(() => 'Click to copy!')
+        map(() => 'Kopírovat odkaz')
       ))),
-    startWith('Click to copy!')
+    startWith('Kopírovat odkaz')
   )
 
   copyTextTippyProps: NgxTippyProps = (() => {

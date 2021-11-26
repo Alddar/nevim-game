@@ -12,7 +12,7 @@ import {CommonModule} from "@angular/common";
 import {CoreModule} from "./features/core/core.module";
 import {InitService} from "./features/core/services/init.service";
 import {NgxTippyModule} from "ngx-tippy-wrapper";
-import {ClipboardModule} from "ngx-clipboard";
+import {NgScrollbarModule} from "ngx-scrollbar";
 
 function initializeApp(initService: InitService){
   return (): Promise<void>  => new Promise((resolve, reject) => {
@@ -38,8 +38,8 @@ function initializeApp(initService: InitService){
       positionClass: 'toast-bottom-right'
     }),
     NgxTippyModule,
-    ClipboardModule,
-    CoreModule
+    CoreModule,
+    NgScrollbarModule
   ],
   providers: [{
     provide: APP_INITIALIZER,

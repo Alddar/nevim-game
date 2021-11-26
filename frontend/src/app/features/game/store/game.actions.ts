@@ -1,7 +1,11 @@
 import {createAction, props} from "@ngrx/store";
-import { MatchDataState } from "shared";
+import {ChatMessage, GameStateToClient } from "shared";
 
 // gameState
 
-export const gameStateUpdate = createAction('game/gameStateUpdate', props<{gameState: MatchDataState}>())
+export const gameStateUpdate = createAction('game/gameStateUpdate', props<{gameState: GameStateToClient}>())
 
+// chatMessages
+
+export const chatMessages = createAction('game/chatMessages', props<{messages: ChatMessage[]}>())
+export const chatMessage = createAction('game/chatMessage', props<{message: ChatMessage}>())

@@ -3,7 +3,7 @@ import {Client, Match, MatchData, MatchPresenceEvent, Session, Socket} from "@he
 import {CookieService} from "ngx-cookie-service";
 import {BehaviorSubject, EMPTY, filter, from, map, mergeMap, Observable, of, take, tap} from "rxjs";
 import {ApiAccount} from "@heroiclabs/nakama-js/dist/api.gen";
-import {rpcCreateMatchId, RpcCreateMatchResponse} from 'shared';
+import {OpCodes, rpcCreateMatchId, RpcCreateMatchResponse} from 'shared';
 
 export enum State {
   INIT,
@@ -18,6 +18,7 @@ export class NakamaService {
   private session: Session | null = null
   private socket: Socket | null = null
   private sessionPromise: Promise<any> | null = null
+  private matchId: string = ''
 
   private matchDataSubject = new BehaviorSubject<MatchData | null>(null)
 
@@ -38,7 +39,7 @@ export class NakamaService {
   private registerSocketCallbacks() {
     if (!this.socket)
       return
-    this.socket.onmatchdata = (matchData) => {
+    this.socket.onmatchdata = (matchData: MatchData) => {
       this.matchDataSubject.next(matchData)
     }
   }
@@ -91,10 +92,16 @@ export class NakamaService {
 
   joinMatch(id: string): Observable<Match> {
     if (!this.socket) return EMPTY
-    return from(this.socket.joinMatch(id))
+    return from(this.socket.joinMatch(id)).pipe(tap(match => {
+      this.matchId = match.match_id
+    }))
   }
 
   leaveMatch(id: string) {
     this.socket?.leaveMatch(id)
+  }
+
+  chatMessage(message: string) {
+    this.socket?.sendMatchState(this.matchId, OpCodes.SEND_CHAT_MESSAGE, message)
   }
 }
