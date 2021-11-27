@@ -1,4 +1,4 @@
-import {GameState, GameStateToClient, OpCodes} from "shared";
+import {GameState, GameStateState, GameStateToClient, OpCodes} from "shared";
 import Context = nkruntime.Context;
 import Logger = nkruntime.Logger;
 import Nakama = nkruntime.Nakama;
@@ -10,8 +10,43 @@ function gameStateToMatchData(state: GameState, userId: string): GameStateToClie
     const {players, gameOwner} = state
     return {
         players,
-        gameOwner
+        gameOwner,
+        state: state.state
     }
+}
+
+const sendGameState = (state: GameState, dispatcher: MatchDispatcher) => {
+    state.players.forEach((player) => {
+        dispatcher.broadcastMessage(
+            OpCodes.GAME_STATE_UPDATE,
+            JSON.stringify(gameStateToMatchData(state, player.userId)),
+            [player]
+        )
+    })
+}
+
+const handleMessage = (state: GameState, message: MatchMessage, dispatcher: MatchDispatcher): GameState => {
+    switch (message.opCode) {
+        case OpCodes.SEND_CHAT_MESSAGE:
+            const from = state.players.find((p) => p.userId === message.sender.userId).displayName
+            const chatMessage = {from, message: JSON.parse(message.data)}
+            dispatcher.broadcastMessage(OpCodes.SEND_CHAT_MESSAGE, JSON.stringify(chatMessage), state.players, null);
+            state.chatMessages = [...state.chatMessages, chatMessage]
+            break
+        case OpCodes.START_GAME:
+            if(state.players.length < 2) {
+                dispatcher.broadcastMessage(OpCodes.ERROR, JSON.stringify('Mas malo kamaradu'), [message.sender])
+                return state
+            }
+            if(state.gameOwner !== message.sender.userId) {
+                dispatcher.broadcastMessage(OpCodes.ERROR, JSON.stringify('Tohle nejde'), [message.sender])
+            }
+            state.state = GameStateState.IN_PROGRESS
+            sendGameState(state, dispatcher)
+            break
+
+    }
+    return state
 }
 
 export const matchInit = (ctx: Context, logger: Logger, nk: Nakama, params: { [key: string]: string; }): { state: GameState; tickRate: number; label: string; } => {
@@ -22,7 +57,8 @@ export const matchInit = (ctx: Context, logger: Logger, nk: Nakama, params: { [k
             players: [],
             gameOwner: '',
             ticksEmpty: 0,
-            chatMessages: []
+            chatMessages: [],
+            state: GameStateState.IN_LOBBY
         },
         tickRate: 5,
         label: ''
@@ -54,18 +90,16 @@ export const matchJoin = (ctx: Context, logger: Logger, nk: Nakama, dispatcher: 
     if (state.gameOwner === '') {
         state.gameOwner = presences[0].userId
     }
-    state.players.forEach((player) => {
-        dispatcher.broadcastMessage(
-            OpCodes.GAME_STATE_UPDATE,
-            JSON.stringify(gameStateToMatchData(state, player.userId)),
-            [player]
-        )
+
+    newPlayers.forEach((player) => {
         dispatcher.broadcastMessage(
             OpCodes.CHAT_MESSAGES,
             JSON.stringify(state.chatMessages),
             [player]
         )
     })
+
+    sendGameState(state, dispatcher)
 
     return {
         state
@@ -102,14 +136,7 @@ export const matchLeave = (ctx: Context, logger: Logger, nk: Nakama, dispatcher:
 export const matchLoop = (ctx: Context, logger: Logger, nk: Nakama, dispatcher: MatchDispatcher, tick: number, state: GameState, messages: MatchMessage[])
     : { state: GameState } | null => {
     messages.forEach(message => {
-        switch (message.opCode) {
-            case OpCodes.SEND_CHAT_MESSAGE:
-                const from = state.players.find((p) => p.userId === message.sender.userId).displayName
-                const chatMessage = {from, message: JSON.parse(message.data)}
-                dispatcher.broadcastMessage(OpCodes.SEND_CHAT_MESSAGE, JSON.stringify(chatMessage), state.players, null);
-                state.chatMessages = [...state.chatMessages, chatMessage]
-                break
-        }
+        state = handleMessage(state, message, dispatcher)
     });
 
     if (state.players.length === 0)

@@ -104,4 +104,8 @@ export class NakamaService {
   chatMessage(message: string) {
     this.socket?.sendMatchState(this.matchId, OpCodes.SEND_CHAT_MESSAGE, message)
   }
+
+  startGame() {
+    this.socket?.sendMatchState(this.matchId, OpCodes.START_GAME, null)
+  }
 }

@@ -1,12 +1,13 @@
 import {Component, OnInit} from '@angular/core';
 import {ActivatedRoute, Router} from "@angular/router";
 import {NakamaService, State} from "../../../core/services/nakama.service";
-import {map, merge, mergeMap, of, startWith, Subject, switchMap, tap, timer} from "rxjs";
+import {filter, map, merge, mergeMap, of, startWith, Subject, switchMap, take, tap, timer} from "rxjs";
 import {Store} from "@ngrx/store";
-import {selectChatMessages, selectGameState} from "../../store/game.selectors";
+import {selectGameState} from "../../store/game.selectors";
 import {ToastrService} from "ngx-toastr";
 import {NgxTippyProps} from "ngx-tippy-wrapper";
 import {Placement} from "@popperjs/core";
+import {GameStateState} from 'shared';
 
 @Component({
   selector: 'app-game-lobby',
@@ -67,7 +68,13 @@ export class GameLobbyComponent implements OnInit {
   }
 
   ngOnInit(): void {
-
+    this.gameState$.pipe(
+      filter((s) => s?.state === GameStateState.IN_PROGRESS),
+      take(1)
+    ).subscribe(
+      () =>
+        this.router.navigate(['game'])
+    )
   }
 
   leaveMatch() {
@@ -82,5 +89,9 @@ export class GameLobbyComponent implements OnInit {
 
   copyLink() {
     this.copyClickedSubj.next(true)
+  }
+
+  startGame() {
+    this.nakamaService.startGame()
   }
 }

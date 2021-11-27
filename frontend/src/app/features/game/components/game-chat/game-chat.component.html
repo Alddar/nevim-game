@@ -1,0 +1,11 @@
+<div class="flex flex-col h-full">
+  <ng-scrollbar class="h-full bg-gray-100 rounded my-2 p-2" #chatMessages>
+    <div *ngFor="let message of chatMessages$ | async">
+      {{message.from}}: {{message.message}}
+    </div>
+  </ng-scrollbar>
+  <form [formGroup]="chatMessageForm" class="flex" (submit)="sendChatMessage()">
+    <input type="text" placeholder="zpráva" class="input-text w-full" formControlName="message" />
+    <button class="btn-primary ml-2" type="submit">Odeslat</button>
+  </form>
+</div>
