@@ -1,1 +1,9 @@
-<p>Game in progress</p>
+<div #board class="w-screen h-screen border border-black relative">
+  <ng-container *ngIf="gameStateUI$ | async as gameStateUI">
+    <ng-container *ngIf="boardSize$ | async as boardSize">
+      <div *ngFor="let card of gameStateUI.cards" [ngStyle]="card.style" class="card bg-red-400 absolute ease-in-out flex">
+        {{ card.value }}
+      </div>
+    </ng-container>
+  </ng-container>
+</div>

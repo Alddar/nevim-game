@@ -51,7 +51,6 @@ export class GameLobbyComponent implements OnInit {
               private router: Router) {
 
     this.nakamaService.waitForState(State.AUTHENTICATED, () => {
-      this.nakamaService.getAccount()?.subscribe((acc) => console.log('acc', acc))
       this.route.params.pipe(
         map((params): string => params['id']),
         tap((matchId) => this.matchId = matchId),
@@ -73,7 +72,7 @@ export class GameLobbyComponent implements OnInit {
       take(1)
     ).subscribe(
       () =>
-        this.router.navigate(['game'])
+        this.router.navigate(['game', this.matchId])
     )
   }
 

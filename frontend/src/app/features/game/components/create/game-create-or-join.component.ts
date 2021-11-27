@@ -34,7 +34,7 @@ export class GameCreateOrJoinComponent implements OnInit {
           },
           error: (error) => {
             console.error(error)
-            this.toastr.error(error)
+            this.toastr.error(JSON.stringify(error))
           }
         }
       )

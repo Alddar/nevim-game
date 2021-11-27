@@ -1,15 +1,18 @@
-import {GameState, GameStateState, GameStateToClient, OpCodes} from "shared";
+import {GameState, GameStateState, GameStateToClient, OpCodes, Player} from "shared";
 import Context = nkruntime.Context;
 import Logger = nkruntime.Logger;
 import Nakama = nkruntime.Nakama;
 import MatchDispatcher = nkruntime.MatchDispatcher;
 import Presence = nkruntime.Presence;
 import MatchMessage = nkruntime.MatchMessage;
+import {initializeGame} from "./functions/initGame";
 
 function gameStateToMatchData(state: GameState, userId: string): GameStateToClient {
-    const {players, gameOwner} = state
+    const {players, gameOwner, draw } = state
     return {
         players,
+        draw,
+        throw: state.throw,
         gameOwner,
         state: state.state
     }
@@ -42,6 +45,7 @@ const handleMessage = (state: GameState, message: MatchMessage, dispatcher: Matc
                 dispatcher.broadcastMessage(OpCodes.ERROR, JSON.stringify('Tohle nejde'), [message.sender])
             }
             state.state = GameStateState.IN_PROGRESS
+            state = initializeGame(state)
             sendGameState(state, dispatcher)
             break
 
@@ -55,6 +59,8 @@ export const matchInit = (ctx: Context, logger: Logger, nk: Nakama, params: { [k
     return {
         state: {
             players: [],
+            draw: [],
+            throw: [],
             gameOwner: '',
             ticksEmpty: 0,
             chatMessages: [],
@@ -68,7 +74,10 @@ export const matchInit = (ctx: Context, logger: Logger, nk: Nakama, params: { [k
 export const matchJoinAttempt = (ctx: Context, logger: Logger, nk: Nakama, dispatcher: MatchDispatcher, tick: number, state: GameState, presence: Presence, metadata: { [key: string]: any })
     : { state: GameState, accept: boolean, rejectMessage?: string | undefined } | null => {
     logger.debug('%q attempted to join Lobby match', ctx.userId);
-
+    // TODO: enable
+    // if(state.state !== GameStateState.IN_LOBBY) {
+    //     return { state, accept: false, rejectMessage: 'Hra uz zacala.' }
+    // }
     return {
         state,
         accept: true
@@ -81,9 +90,14 @@ export const matchJoin = (ctx: Context, logger: Logger, nk: Nakama, dispatcher: 
         return {state}
     }
 
-    const newPlayers = presences.map((presence) => {
+    const newPlayers = presences.map((presence): Player => {
         const {displayName} = nk.usersGetId([presence.userId])[0]
-        return {...presence, displayName: displayName}
+        return {
+            ...presence,
+            displayName: displayName,
+            cards: [null, null, null, null, null, null, null, null],
+            hand: null
+        }
     })
     state.players = [...state.players, ...newPlayers]
 

@@ -5,21 +5,43 @@ import Presence = nkruntime.Presence;
 import Match = nkruntime.Match;
 
 export const rpcCreateMatchId = 'create-match'
+
 export interface RpcCreateMatchParams {
 
 }
+
 export type RpcCreateMatchResponse = Match
 
 export const rpcListMatchesId = 'list-matches'
+
 export interface RpcListMatchesParams {
 
 }
+
 export interface RpcListMatchesResponse {
     matches: Match[]
 }
 
+export interface Card {
+    id: string,
+    value: string,
+    index: number,
+}
+
+export type Hand = [
+        Card | null,
+        Card | null,
+        Card | null,
+        Card | null,
+        Card | null,
+        Card | null,
+        Card | null,
+        Card | null,
+]
+
 export interface Player extends Presence {
-    displayName: string
+    displayName: string,
+    hand: Hand
 }
 
 export interface ChatMessage {
@@ -34,6 +56,9 @@ export class GameStateState {
 
 export interface GameState extends MatchState {
     players: Player[],
+    draw: Card[],
+    throw: Card[],
+
     ticksEmpty: number,
     gameOwner: string,
     chatMessages: ChatMessage[],
