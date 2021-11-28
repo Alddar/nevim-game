@@ -48,7 +48,21 @@ const handleMessage = (state: GameState, message: MatchMessage, dispatcher: Matc
             state = initializeGame(state)
             sendGameState(state, dispatcher)
             break
-
+        case OpCodes.TEST_ACTION:
+            const randomPlayer = Math.floor(Math.random() * state.players.length)
+            let cardIndex = 0
+            for(let i = 0; i < 8; i++) {
+                if(state.players[randomPlayer].cards[i] !== null) {
+                    cardIndex = i
+                    break
+                }
+            }
+            const card = state.players[randomPlayer].cards[cardIndex]
+            card.index = state.index++
+            state.throw = [...state.throw, card]
+            state.players[randomPlayer].cards[cardIndex] = null
+            sendGameState(state, dispatcher)
+            break
     }
     return state
 }
@@ -64,6 +78,7 @@ export const matchInit = (ctx: Context, logger: Logger, nk: Nakama, params: { [k
             gameOwner: '',
             ticksEmpty: 0,
             chatMessages: [],
+            index: 54,
             state: GameStateState.IN_LOBBY
         },
         tickRate: 5,
@@ -112,6 +127,11 @@ export const matchJoin = (ctx: Context, logger: Logger, nk: Nakama, dispatcher: 
             [player]
         )
     })
+
+    // TODO: REMOVE
+    if(state.state === GameStateState.IN_PROGRESS) {
+        state = initializeGame(state)
+    }
 
     sendGameState(state, dispatcher)
 

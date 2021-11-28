@@ -1,9 +1,22 @@
-<div #board class="w-screen h-screen border border-black relative">
-  <ng-container *ngIf="gameStateUI$ | async as gameStateUI">
-    <ng-container *ngIf="boardSize$ | async as boardSize">
-      <div *ngFor="let card of gameStateUI.cards" [ngStyle]="card.style" class="card bg-red-400 absolute ease-in-out flex">
-        {{ card.value }}
+<div class="flex w-screen h-screen">
+  <div *ngIf="boardSize$ | async as boardSize"
+       [ngStyle]="{ width: boardSize.width + 'px', height: boardSize.height + 'px' }"
+       class="border border-black relative m-auto">
+    <ng-container *ngIf="gameStateUI$ | async as gameStateUI">
+      <ng-container *ngFor="let cardId of cardIds">
+        <div *ngIf="cardById$(cardId) | async as card" (click)="testAction()"
+             [@cards]="{value: card.state, params: {boardWidth: boardSize.width, boardHeight: boardSize.height}}"
+             class="card bg-red-400 absolute flex rounded border border-gray-400"
+             [id]="cardId"
+             [ngStyle]="{width: (CARD_WIDTH * boardSize.width) + 'px', height: (CARD_HEIGHT * boardSize.height) + 'px'}">
+          <span class="text-gray-100 text-xl m-auto font-semibold">{{ card.value }}</span>
+        </div>
+      </ng-container>
+      <div *ngFor="let player of gameStateUI.players"
+           class="centered-overflow absolute w-0 h-0 flex justify-center items-center whitespace-nowrap z-50"
+           [ngStyle]="player.style">
+        {{ player.displayName }}
       </div>
     </ng-container>
-  </ng-container>
+  </div>
 </div>

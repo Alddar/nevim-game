@@ -14,6 +14,7 @@ export enum State {
   providedIn: 'root'
 })
 export class NakamaService {
+  private verbose = false
   private client: Client
   private session: Session | null = null
   private socket: Socket | null = null
@@ -53,7 +54,7 @@ export class NakamaService {
 
   authenticate(deviceId: string, username: string): Observable<boolean> {
     this.stateSubject.next(State.INIT)
-    this.socket = this.client.createSocket(false, true)
+    this.socket = this.client.createSocket(false, this.verbose)
 
     return from(this.client.authenticateDevice(deviceId, true, deviceId)).pipe(
       mergeMap((session) => {
@@ -107,5 +108,9 @@ export class NakamaService {
 
   startGame() {
     this.socket?.sendMatchState(this.matchId, OpCodes.START_GAME, null)
+  }
+
+  testAction() {
+    this.socket?.sendMatchState(this.matchId, OpCodes.TEST_ACTION, null)
   }
 }

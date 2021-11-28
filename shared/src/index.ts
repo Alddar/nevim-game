@@ -23,7 +23,7 @@ export interface RpcListMatchesResponse {
 }
 
 export interface Card {
-    id: string,
+    id: number,
     value: string,
     index: number,
 }
@@ -41,7 +41,8 @@ export type Hand = [
 
 export interface Player extends Presence {
     displayName: string,
-    hand: Hand
+    cards: Hand,
+    hand: Card | null
 }
 
 export interface ChatMessage {
@@ -62,11 +63,15 @@ export interface GameState extends MatchState {
     ticksEmpty: number,
     gameOwner: string,
     chatMessages: ChatMessage[],
-    state: number
+    state: number,
+    index: number
 }
 
 export interface GameStateToClient {
-    players: Player[]
+    players: Player[],
+    draw: Card[],
+    throw: Card[]
+
     gameOwner: string,
     state: number
 }
@@ -77,4 +82,5 @@ export class OpCodes {
     public static readonly SEND_CHAT_MESSAGE = 3
     public static readonly CHAT_MESSAGES = 4
     public static readonly START_GAME = 5
+    public static readonly TEST_ACTION = 99
 }

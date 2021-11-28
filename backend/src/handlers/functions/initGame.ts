@@ -3,7 +3,7 @@ import { GameState, Card } from "shared";
 const createCards = (): Card[] => {
     const cards: Card[] = [];
     let index = 53;
-    let id = 1
+    let id = 0
     for (const p of ["c", "d", "h", "s"]) {
         for (let i = 1; i <= 13; i++) {
             cards.push({
@@ -37,5 +37,7 @@ export const initializeGame = (state: GameState): GameState => {
     })
 
     state.draw = cards;
+    state.throw = []
+    state.index = 54
     return state;
 }

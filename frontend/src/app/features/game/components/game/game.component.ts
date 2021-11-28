@@ -1,68 +1,107 @@
 import {AfterViewInit, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {NakamaService, State} from "../../../core/services/nakama.service";
 import {
-  BehaviorSubject,
   combineLatest,
   debounce,
-  EMPTY,
+  EMPTY, filter,
   fromEvent, interval,
-  map,
+  map, startWith,
   switchMap,
   take,
   tap,
-  withLatestFrom
 } from "rxjs";
 import {ActivatedRoute, Router} from "@angular/router";
 import {ToastrService} from "ngx-toastr";
 import {Store} from "@ngrx/store";
 import {selectGameState} from "../../store/game.selectors";
 import {GameStateState} from 'shared';
-import {gameStateToUI} from "../../utils/gameStateToUI";
-import {Size} from "../../models/common"
-import {CardStyle, CardUI, GameStateUI, GameStateUIWithStyles} from '../../models/gameStateUI';
-import {CARD_HEIGHT, CARD_WIDTH} from "../../const/coordinates";
+import {GameStateUI} from '../../models/gameStateUI';
+import {BOARD_HEIGHT, BOARD_WIDTH, CARD_HEIGHT, CARD_WIDTH, PLAYER_NAME_POSITIONS} from "../../const/coordinates";
+import {cardsAnimation} from "../../animations/cards";
 
 
 @Component({
   selector: 'app-game',
   templateUrl: './game.component.html',
-  styleUrls: ['./game.component.sass']
+  styleUrls: ['./game.component.sass'],
+  animations: [
+    cardsAnimation()
+  ]
 })
-export class GameComponent implements OnInit, AfterViewInit {
-  @ViewChild('board')
-  board!: ElementRef
+export class GameComponent implements OnInit {
+  boardSize$ =
+    fromEvent(window, 'resize').pipe(
+      debounce((i) => interval(100)),
+      map(() => ({width: window.innerWidth, height: window.innerHeight})),
+      startWith({width: window.innerWidth, height: window.innerHeight}),
+      map(size => {
+        if(size.width / size.height > BOARD_WIDTH / BOARD_HEIGHT) {
+          const newWidth = size.height / BOARD_HEIGHT * BOARD_WIDTH
+            return {
+            width: newWidth,
+            height: size.height
+          }
+        }
+        const newHeight = size.width / BOARD_WIDTH * BOARD_HEIGHT
+        return {
+          width: size.width,
+          height: newHeight
+        }
+      })
+    )
 
   matchId: string = ''
-
-  private boardSizeSubject = new BehaviorSubject<Size>({width: 0, height: 0});
-  boardSize$ = this.boardSizeSubject.asObservable()
+  cardIds = [...Array(54).keys()]
 
   gameStateUI$ = combineLatest([
-    this.store.select(selectGameState).pipe(
-      map(gameStateToUI)
-    ),
+    this.store.select(selectGameState),
     this.boardSize$
   ]).pipe(
-    map(([gameState, boardSize]): GameStateUIWithStyles | null => {
-        if (!gameState)
-          return null
-        console.log(gameState, boardSize)
-        const cards = gameState.cards.map((card): CardUI & { style: CardStyle } => ({
-          ...card,
-          style: {
-            width: `${boardSize.width * CARD_WIDTH}px`,
-            height: `${boardSize.height * CARD_HEIGHT}px`,
-            transform: `translate(
-              ${(card.x - CARD_WIDTH / 2) * (boardSize.width)}px,
-              ${(card.y - CARD_HEIGHT / 2) * (boardSize.height)}px
-          )`,
-            'z-index': card.index
+    map(([gameState, boardSize]): GameStateUI | null => {
+      if(!gameState)
+        return null
+
+      const players = gameState.players.map((player, playerIndex) => ({
+                ...player,
+                style: {
+                  transform: `translate(${(PLAYER_NAME_POSITIONS[playerIndex].x) * (boardSize.width)}px, ${(PLAYER_NAME_POSITIONS[playerIndex].y) * (boardSize.height)}px)`
+                }
+              }))
+
+      const cards = []
+      cards.push(...gameState.draw.map((card) => ({...card, state: 'draw'})))
+      cards.push(...gameState.throw.map((card) => ({...card, state: 'throw'})))
+      players.forEach((player, playerIndex) => {
+        player.cards.forEach((card, cardIndex) => {
+          if(card !== null) {
+            cards.push({...card, state: `player${playerIndex}-card${cardIndex}`})
           }
-        }))
-        return {...gameState, cards}
-      }
-    )
+        })
+      })
+
+      return {...gameState, players, cards}
+    }),
+    filter(gameState => gameState !== null),
   )
+
+  gameStateCards$ = this.gameStateUI$.pipe(
+    map(gameState => gameState?.cards),
+  )
+
+  cardById$(id: number) {
+    return this.gameStateCards$.pipe(
+      filter(cards => cards !== null),
+      map((cards) => cards?.find((card) => card.id === id))
+    )
+  }
+
+  get CARD_WIDTH() {
+    return CARD_WIDTH
+  }
+
+  get CARD_HEIGHT() {
+    return CARD_HEIGHT
+  }
 
   constructor(private route: ActivatedRoute,
               private nakamaService: NakamaService,
@@ -96,18 +135,7 @@ export class GameComponent implements OnInit, AfterViewInit {
     })
   }
 
-  ngAfterViewInit() {
-    const handleResize = (): any => {
-      const width = this.board?.nativeElement.offsetWidth,
-        height = this.board?.nativeElement.offsetHeight
-      this.boardSizeSubject.next({width, height})
-    }
-    fromEvent(window, 'resize').pipe(
-      debounce((i) => interval(500))
-    ).subscribe(() => {
-        handleResize()
-      }
-    )
-    handleResize()
+  testAction() {
+    this.nakamaService.testAction()
   }
 }
